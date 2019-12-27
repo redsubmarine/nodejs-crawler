@@ -1,0 +1,8 @@
+{
+  "name": "nodejs-crawler",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "red",
+  "license": "MIT",
+  "private": false
+}
