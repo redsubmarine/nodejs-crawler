@@ -2,6 +2,9 @@
   "name": "nodejs-crawler",
   "version": "1.0.0",
   "main": "index.js",
+  "scripts": {
+    "start": "node index"
+  },
   "author": "red",
   "license": "MIT",
   "private": false
