@@ -1,17 +1,20 @@
-const parse = require('csv-parse/lib/sync')
-const fs = require('fs')
+const xlsx = require('xlsx')
 const puppeteer = require('puppeteer')
-const stringify = require('csv-stringify/lib/sync')
+const add_to_sheet = require('./add_to_sheet')
 
-const csv = fs.readFileSync('csv/data.csv')
-const records = parse(csv.toString('utf-8'))
+const workbook = xlsx.readFile('xlsx/data.xlsx')
+const ws = workbook.Sheets.영화목록
+const records = xlsx.utils.sheet_to_json(ws)
 
 const crawler = async () => {
-    const result = []
     const browser = await puppeteer.launch({ headless: process.env.NODE_ENV === 'production' })
-    await Promise.all(records.map(async (r, i) => {
-        const page = await browser.newPage()
-        await page.goto(r[1])
+    const page = await browser.newPage()
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.4 Safari/605.1.15')
+
+    add_to_sheet(ws, 'C1', 's', '평점')
+
+    for (const [i, r] of records.entries()) {
+        await page.goto(r.링크)
 
         const text = await page.evaluate(() => {
             const score = document.querySelector('.score.score_left .star_score')
@@ -19,21 +22,18 @@ const crawler = async () => {
                 return score.textContent
             }
         })
-        result[i] = [r[0], r[1], text.trim()]
+        if (text) {
+            console.log(r.제목, '평점', text.trim())
+            const newCell = `C${i + 2}`
+            add_to_sheet(ws, newCell, 'n', parseFloat(text.trim()))
+        }
 
-        // const scoreEl = await page.$('.score.score_left .star_score')
-        // if (scoreEl) {
-        //     const text = await page.evaluate(tag => tag.textContent, scoreEl)
-        //     result[i] = [r[0], r[1], text.trim()]
-        // }
-
-        await page.close()
-    }))
+        await page.waitFor(1000)
+    }
+    await page.close()
     await browser.close()
 
-    const str = stringify(result)
-    fs.writeFileSync('csv/result.csv', str)
-
+    xlsx.writeFile(workbook, 'xlsx/result.xlsx')
 }
 
 try {
