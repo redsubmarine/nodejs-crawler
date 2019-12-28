@@ -7,32 +7,23 @@ const records = parse(csv.toString('utf-8'))
 
 const crawler = async () => {
     const browser = await puppeteer.launch({ headless: process.env.NODE_ENV === 'production' })
+    await Promise.all(records.map(async (r, i) => {
+        const page = await browser.newPage()
+        await page.goto(r[1])
+        const scoreEl = await page.$('.score.score_left .star_score')
+        if (scoreEl) {
+            const text = await page.evaluate(tag => tag.textContent, scoreEl)
+            console.log(r[0], '', text.trim())
+        }
 
-    const [page, page2, page3] = await Promise.all([
-        browser.newPage(),
-        browser.newPage(),
-        browser.newPage(),
-    ])
-    await Promise.all([
-        page.goto('http://daum.net'),
-        page2.goto('http://naver.com'),
-        page3.goto('http://apple.com'),
-    ])
-
-    console.log('working')
-
-    await Promise.all([
-        page.waitFor(3000),
-        page2.waitFor(1000),
-        page3.waitFor(2000),
-    ])
-
-    await page.close()
-    await page2.close()
-    await page3.close()
+        await page.close()
+    }))
     await browser.close()
 }
 
-crawler()
-
+try {
+    crawler()
+} catch (e) {
+    console.error(e)
+}
 console.log('started')
