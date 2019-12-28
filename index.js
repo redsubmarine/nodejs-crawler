@@ -1,34 +1,38 @@
-const xlsx = require('xlsx')
-const axios = require('axios')      // ajax
-const cheerio = require('cheerio')  // html parser
-const add_to_sheet = require('./add_to_sheet')
+const parse = require('csv-parse/lib/sync')
+const fs = require('fs')
+const puppeteer = require('puppeteer')
 
-const workbook = xlsx.readFile('xlsx/data.xlsx')
-const ws = workbook.Sheets.영화목록
-ws['!ref'] = ws['!ref'].split(':')
-    .map((v, i) => (i === 0) ? 'A2' : v)
-    .join(':')
-
-const records = xlsx.utils.sheet_to_json(ws, { header: 'A' })
-// records.shift()
-
+const csv = fs.readFileSync('csv/data.csv')
+const records = parse(csv.toString('utf-8'))
 
 const crawler = async () => {
-    add_to_sheet(ws, 'C1', 's', '평점')
-    await Promise.all(records.map( async (r, i) => {
-        const response = await axios.get(r.B)
-        if (response.status === 200) {
-            const html = response.data
+    const browser = await puppeteer.launch({ headless: process.env.NODE_ENV === 'production' })
 
-            const $ = cheerio.load(html)
-            const text = $('.score.score_left .star_score').text()
+    const [page, page2, page3] = await Promise.all([
+        browser.newPage(),
+        browser.newPage(),
+        browser.newPage(),
+    ])
+    await Promise.all([
+        page.goto('http://daum.net'),
+        page2.goto('http://naver.com'),
+        page3.goto('http://apple.com'),
+    ])
 
-            console.log(r.A, '평점', text.trim())
-            const newCell = `C${ i + 2 }`
-            add_to_sheet(ws, newCell, 'n', parseFloat(text.trim()))
-        }
-    }))
-    xlsx.writeFile(workbook, 'xlsx/result.xlsx')
+    console.log('working')
+
+    await Promise.all([
+        page.waitFor(3000),
+        page2.waitFor(1000),
+        page3.waitFor(2000),
+    ])
+
+    await page.close()
+    await page2.close()
+    await page3.close()
+    await browser.close()
 }
 
 crawler()
+
+console.log('started')
