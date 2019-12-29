@@ -23,8 +23,15 @@ fs.readdir('poster', (err) => {
 })
 
 const crawler = async () => {
-    const browser = await puppeteer.launch({ headless: process.env.NODE_ENV === 'production' })
+    const browser = await puppeteer.launch({
+        headless: process.env.NODE_ENV === 'production',
+        args: ['--window-size=1920,1080'],
+    })
     const page = await browser.newPage()
+    await page.setViewport({
+        width: 1920,
+        height: 1080,
+    })
     await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_2) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.4 Safari/605.1.15')
 
     add_to_sheet(ws, 'C1', 's', '평점')
@@ -51,6 +58,17 @@ const crawler = async () => {
             add_to_sheet(ws, newCell, 'n', parseFloat(result.score.trim()))
         }
         if (result.img) {
+            const buffer = await page.screenshot({
+                path: `screenshot/${r.제목}.png`,
+                fullPage: true,
+                // clip: {
+                //     x: 100,
+                //     y: 100,
+                //     width: 300,
+                //     height: 300,
+                // }
+            })
+            // fs.writeFileSync(`screenshot/${r.제목}.jpg`, buffer)
             const imgResult = await axios.get(result.img.replace(/\?.*$/, ''), {
                 responseType: 'arraybuffer',
             })
