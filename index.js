@@ -8,23 +8,32 @@ const crawler = async () => {
         const page = await browser.newPage()
 
         await page.goto('https://unsplash.com')
-        const result = await page.evaluate(() => {
-            let imgs = []
-            const imgEls = document.querySelectorAll('.nDTlD')
-            if (imgEls.length) {
-                imgEls.forEach((v) => {
-                    let src = v.querySelector('img._2zEKz').src
-                    imgs.push(src)
-                    v.parentElement.removeChild(v)
-                })
-            }
-            window.scrollBy(0, 300)
-            return imgs.filter((url) => url.length)
-        })
-        console.log(result)
+        let result = []
+        while (result.length <= 30) {
+            let srcs = await page.evaluate(() => {
+                window.scrollTo(0, 0)
+                let imgs = []
+                const imgEls = document.querySelectorAll('.nDTlD')
+                if (imgEls.length) {
+                    imgEls.forEach((v) => {
+                        let src = v.querySelector('img._2zEKz').src
+                        imgs.push(src)
+                        v.parentElement.removeChild(v)
+                    })
+                }
+                window.scrollBy(0, 300)
+                return imgs.filter((url) => url.length)
+            })
+            result = result.concat(srcs)
 
-        await page.waitForSelector('.nDTlD')
-        console.log('새이미지들 대기 완료')
+            await page.waitForSelector('.nDTlD')
+            console.log('새이미지들 대기 완료')
+        }
+
+        console.log(result)
+        console.log('끝')
+        await page.close()
+        await browser.close()
     } catch (e) {
         console.error(e)
     }
