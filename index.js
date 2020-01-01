@@ -16,14 +16,30 @@ const crawler = async () => {
 
         const id = process.env.EMAIL
         const password = process.env.PASSWORD
-        
+
+        /*
         await page.evaluate((id, password) => {
             document.querySelector('#email').value = id
             document.querySelector('#pass').value =  password
             document.querySelector('#loginbutton').click()
         }, id, password)
+        */
+        await page.type('#email', process.env.EMAIL)
+        await page.type('#pass', process.env.PASSWORD)
+        await page.hover('#loginbutton')
+        await page.waitFor(3000)
+        await page.click('#loginbutton')
+        await page.waitFor(5000)
+        await page.keyboard.press('Escape')
 
-        await page.waitFor(4000)
+        await page.waitFor(1000)
+        await page.click('#userNavigationLabel')
+        await page.waitForSelector('li.navSubmenu:last-child')
+        await page.click('li.navSubmenu:last-child')
+        // await page.evaluate(() => {
+        //     document.querySelector('li.navSubmenu:last-child').click()
+        // })
+        await page.waitFor(5000)
 
         await page.close()
         await browser.close()
