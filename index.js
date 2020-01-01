@@ -1,58 +1,32 @@
 const puppeteer = require('puppeteer')
-const axios = require('axios')
-const fs = require('fs')
-
-fs.readdir('imgs', (err) => {
-    if (err) {
-        console.error('not found imgs folder')
-        fs.mkdirSync('imgs')
-    }
-})
+const dotenv = require('dotenv')
+dotenv.config()
 
 const crawler = async () => {
     try {
-        const browser = await puppeteer.launch({ headless: false })
+        const browser = await puppeteer.launch({ headless: false, args: ['--window-size=1920,1080'] })
         const page = await browser.newPage()
 
-        await page.goto('https://unsplash.com')
-        let result = []
-        while (result.length <= 30) {
-            let srcs = await page.evaluate(() => {
-                window.scrollTo(0, 0)
-                let imgs = []
-                const imgEls = document.querySelectorAll('figure')
-                if (imgEls.length) {
-                    imgEls.forEach((v) => {
-                        let src = v.querySelector('img._2zEKz').src
-                        imgs.push(src)
-                        v.parentElement.removeChild(v)
-                    })
-                }
-                window.scrollBy(0, 100)
-                setTimeout(() => {
-                    window.scrollBy(0, 200)
-                }, 500)
-                return imgs.filter((url) => url.length)
-            })
-            result = result.concat(srcs)
+        await page.setViewport({
+            width: 1920,
+            height: 1080,
+        })
 
-            await page.waitForSelector('figure')
-            console.log('새이미지들 대기 완료')
-        }
+        await page.goto('https://facebook.com')
 
-        console.log(result)
+        const id = process.env.EMAIL
+        const password = process.env.PASSWORD
+        
+        await page.evaluate((id, password) => {
+            document.querySelector('#email').value = id
+            document.querySelector('#pass').value =  password
+            document.querySelector('#loginbutton').click()
+        }, id, password)
+
+        await page.waitFor(4000)
+
         await page.close()
         await browser.close()
-
-        for (const src of result) {
-            console.log(' -', src)
-            const imgResult = await axios.get(src/*.replace(/\?.*$/, '')*/, {
-                responseType: 'arraybuffer',
-            })
-            fs.writeFileSync(`imgs/${new Date().valueOf()}.jpeg`, imgResult.data)
-        }
-
-        console.log('끝')
     } catch (e) {
         console.error(e)
     }
