@@ -26,11 +26,11 @@ const crawler = async () => {
         }, id, password)
         */
         await page.evaluate(() => {
-      (() => {
-        const box = document.createElement('div')
-        box.classList.add('mouse-helper')
-        const styleElement = document.createElement('style')
-        styleElement.innerHTML = `
+            (() => {
+                const box = document.createElement('div')
+                box.classList.add('mouse-helper')
+                const styleElement = document.createElement('style')
+                styleElement.innerHTML = `
           .mouse-helper {
             pointer-events: none;
             position: absolute;
@@ -67,55 +67,47 @@ const crawler = async () => {
             border-color: rgba(0,255,0,0.9);
           }
           `
-        document.head.appendChild(styleElement)
-        document.body.appendChild(box)
-        document.addEventListener('mousemove', event => {
-          box.style.left = event.pageX + 'px'
-          box.style.top = event.pageY + 'px'
-          updateButtons(event.buttons)
-        }, true)
-        document.addEventListener('mousedown', event => {
-          updateButtons(event.buttons)
-          box.classList.add('button-' + event.which)
-        }, true)
-        document.addEventListener('mouseup', event => {
-          updateButtons(event.buttons)
-          box.classList.remove('button-' + event.which)
-        }, true)
-        function updateButtons(buttons) {
-          for (let i = 0; i < 5; i++)
-            box.classList.toggle('button-' + i, !!(buttons & (1 << i)))
-        }
-      })()
-    })
-
-        await page.type('#email', process.env.EMAIL)
-        await page.type('#pass', process.env.PASSWORD)
-        await page.hover('#loginbutton')
-
-        await page.waitFor(1000)
-        await page.mouse.move(1000, 40)
-        await page.waitFor(1000)
-        await page.mouse.click(1000, 40)
-
-
-        return
-        await page.waitFor(3000)
-        await page.click('#loginbutton')
-        await page.waitForResponse((response) => {
-            return response.url().includes('login_attempt')
+                document.head.appendChild(styleElement)
+                document.body.appendChild(box)
+                document.addEventListener('mousemove', event => {
+                    box.style.left = event.pageX + 'px'
+                    box.style.top = event.pageY + 'px'
+                    updateButtons(event.buttons)
+                }, true)
+                document.addEventListener('mousedown', event => {
+                    updateButtons(event.buttons)
+                    box.classList.add('button-' + event.which)
+                }, true)
+                document.addEventListener('mouseup', event => {
+                    updateButtons(event.buttons)
+                    box.classList.remove('button-' + event.which)
+                }, true)
+                function updateButtons(buttons) {
+                    for (let i = 0; i < 5; i++)
+                        box.classList.toggle('button-' + i, !!(buttons & (1 << i)))
+                }
+            })()
         })
-        // await page.keyboard.press('Escape')
 
-        await page.waitFor(1000)
-        await page.click('#userNavigationLabel')
-        await page.waitForSelector('li.navSubmenu:last-child')
-        await page.click('li.navSubmenu:last-child')
-        // await page.evaluate(() => {
-        //     document.querySelector('li.navSubmenu:last-child').click()
-        // })
+        await page.click('#email')
+        await page.keyboard.down('ShiftLeft')
+        await page.keyboard.press('KeyR')
+        await page.keyboard.press('KeyE')
+        await page.keyboard.press('KeyD')
+        await page.keyboard.press('KeyS')
+        await page.keyboard.press('KeyU')
+        await page.keyboard.press('KeyB')
+        await page.keyboard.press('KeyM')
+        await page.keyboard.press('KeyA')
+        await page.keyboard.press('KeyR')
+        await page.keyboard.press('KeyI')
+        await page.keyboard.press('KeyN')
+        await page.keyboard.press('KeyE')
+        await page.keyboard.up('ShiftLeft')
+        await page.keyboard.press('KeyZ')
+
+
         await page.waitFor(5000)
-
         await page.close()
         await browser.close()
     } catch (e) {
